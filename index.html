@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>HoloTrack – Motion-Tracked Annotations for Medical Usage</title>
+
+    <style>
+      :root{
+        --bg:#0b0f14;
+        --panel:#0f1621;
+        --border:#223044;
+        --text:#e8eef6;
+        --muted:#a9b6c7;
+      }
+      *{box-sizing:border-box}
+      body{
+        margin:0;
+        background:var(--bg);
+        color:var(--text);
+        font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      }
+
+      /* ===== HEADER ===== */
+      header{
+        padding:14px 20px;
+        border-bottom:1px solid var(--border);
+        display:flex;
+        align-items:center;
+        background: rgba(11,15,20,.75);
+        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .brand{
+        display:flex;
+        gap:12px;
+        align-items:center;
+      }
+      .logoImg{
+        height:28px;
+        width:auto;
+        object-fit:contain;
+        filter: grayscale(100%) brightness(1.15) contrast(1.05);
+      }
+      .brandTitle{
+        font-size:14px;
+        font-weight:700;
+        letter-spacing:.3px;
+        white-space:nowrap;
+      }
+
+      /* ===== LAYOUT ===== */
+      .wrap{padding:18px 20px;}
+      .layout{
+        width:min(1280px,100%);
+        margin:0 auto;
+        display:grid;
+        grid-template-columns: 1.4fr .6fr;
+        gap:14px;
+        align-items:start;
+      }
+
+      /* ===== VIDEO PANEL ===== */
+      .panel{
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:16px;
+        overflow:hidden;
+        background:#000;
+      }
+      .label{
+        padding:10px 12px;
+        background: rgba(255,255,255,.04);
+        border-bottom:1px solid rgba(255,255,255,.10);
+        font-size:13px;
+        color: rgba(232,238,246,.88);
+      }
+      .stage{position:relative;}
+      video{width:100%;display:block;}
+      canvas{position:absolute;left:0;top:0;pointer-events:none;}
+
+      /* ===== SIDE PANEL ===== */
+      .side{
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:16px;
+        background: rgba(255,255,255,.03);
+        padding:12px;
+        display:grid;
+        gap:12px;
+      }
+      .sectionTitle{
+        font-size:12px;
+        color:rgba(232,238,246,.60);
+        text-transform:uppercase;
+        letter-spacing:.12em;
+      }
+      .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
+      button{
+        background:#1b2a3d;
+        border:1px solid #2b3f5b;
+        color:#e8eef6;
+        padding:9px 11px;
+        border-radius:12px;
+        cursor:pointer;
+        font-weight:800;
+        font-size:13px;
+      }
+      button.secondary{
+        background:#121c2a;
+        border-color: rgba(255,255,255,.14);
+        font-weight:700;
+      }
+      button:hover{filter:brightness(1.1);}
+
+      label{
+        display:inline-flex;
+        gap:8px;
+        align-items:center;
+        font-size:13px;
+        color:rgba(232,238,246,.90);
+      }
+      input[type="checkbox"]{transform:scale(1.05);}
+
+      .pill{
+        padding:7px 10px;
+        border:1px solid rgba(255,255,255,.14);
+        border-radius:999px;
+        background: rgba(0,0,0,.20);
+        font-size:12px;
+        color: rgba(232,238,246,.86);
+        white-space:nowrap;
+      }
+
+      .log{
+        background: rgba(0,0,0,.22);
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:12px;
+        padding:10px;
+        height:180px;
+        overflow:auto;
+        font-family: ui-monospace, Menlo, monospace;
+        font-size:12px;
+      }
+
+      @media (max-width: 1000px){
+        .layout{grid-template-columns:1fr;}
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div class="brand">
+        <img src="holoray-logo.png" alt="HoloRay logo" class="logoImg" />
+        <div class="brandTitle">
+          HoloTrack – Motion-Tracked Annotations for Medical Usage
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="layout">
+        <!-- VIDEO -->
+        <div class="panel">
+          <div class="label">
+            Tracked Video + Annotation Overlay (Add annotation → click video)
+          </div>
+
+          <div class="stage" id="stage">
+            <video id="video" playsinline>
+              <source src="sample.mp4" type="video/mp4">
+            </video>
+            <canvas id="overlay"></canvas>
+          </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="side">
+          <div>
+            <div class="sectionTitle">Controls</div>
+            <div class="row" style="margin-top:10px;">
+              <button id="playBtn">Play</button>
+              <button id="addBtn">Add annotation</button>
+              <button id="resetBtn" class="secondary">Reset</button>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+              <label><input type="checkbox" id="staticToggle"> Static</label>
+              <label><input type="checkbox" id="smoothToggle" checked> Smoothed</label>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+              <button id="occBtn" class="secondary">Occlusion</button>
+              <button id="oofBtn" class="secondary">Out of frame</button>
+              <button id="recBtn" class="secondary">Reacquire</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="sectionTitle">Live metrics</div>
+            <div class="row" style="margin-top:10px;">
+              <span class="pill" id="statePill">STATE: OFF</span>
+              <span class="pill" id="perfPill">FPS: -- | Lat: -- ms</span>
+              <span class="pill" id="confPill">Conf: --</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="sectionTitle">Event log</div>
+            <div class="log" id="log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const video=document.getElementById('video');
+      const stage=document.getElementById('stage');
+      const canvas=document.getElementById('overlay');
+      const ctx=canvas.getContext('2d');
+
+      const playBtn=document.getElementById('playBtn');
+      const addBtn=document.getElementById('addBtn');
+      const resetBtn=document.getElementById('resetBtn');
+      const staticToggle=document.getElementById('staticToggle');
+      const smoothToggle=document.getElementById('smoothToggle');
+      const occBtn=document.getElementById('occBtn');
+      const oofBtn=document.getElementById('oofBtn');
+      const recBtn=document.getElementById('recBtn');
+      const statePill=document.getElementById('statePill');
+      const perfPill=document.getElementById('perfPill');
+      const confPill=document.getElementById('confPill');
+      const logEl=document.getElementById('log');
+
+      const ann={x:null,y:null,conf:0.85};
+      let awaitingClick=false,trackingOn=false;
+      let anchorX=0,anchorY=0,smoothX=0,smoothY=0;
+      let startTime=performance.now(),lastFrameT=performance.now();
+      let fps=0,latencyMs=26;
+      let occUntil=0,oofUntil=0,state="OFF";
+
+      function log(m){
+        logEl.innerHTML=`[${new Date().toLocaleTimeString()}] ${m}<br>`+logEl.innerHTML;
+      }
+      function setState(s){
+        state=s;
+        statePill.textContent=`STATE: ${s}`;
+      }
+      function fitCanvas(){
+        const r=video.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+        canvas.width=Math.round(r.width);
+        canvas.height=Math.round(r.height);
+        canvas.style.left=(r.left-sr.left)+"px";
+        canvas.style.top=(r.top-sr.top)+"px";
+      }
+      function clamp(v,l,h){return Math.max(l,Math.min(h,v));}
+
+      function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(ann.x===null) return;
+        let x=ann.x,y=ann.y,now=performance.now();
+
+        if(trackingOn&&!staticToggle.checked){
+          if(now<occUntil||now<oofUntil){
+            ann.conf=0.1;setState("LOST");
+          }else{
+            setState(state==="LOST"?"REACQUIRED":"TRACKING");
+            const dt=(now-startTime)/1000,amp=10;
+            let tx=anchorX+Math.sin(dt*1.2)*amp;
+            let ty=anchorY+Math.cos(dt*1.0)*amp;
+            if(!smoothToggle.checked){tx+=(Math.random()-.5)*4;ty+=(Math.random()-.5)*4;}
+            const s=smoothToggle.checked?0.12:0.45;
+            smoothX+=(tx-smoothX)*s;
+            smoothY+=(ty-smoothY)*s;
+            smoothX=clamp(smoothX,10,canvas.width-10);
+            smoothY=clamp(smoothY,10,canvas.height-10);
+            x=smoothX;y=smoothY;
+            ann.conf=smoothToggle.checked?0.9:0.75;
+          }
+        }
+        ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);
+        ctx.fillStyle="rgba(255,255,255,0.92)";ctx.fill();
+        ctx.font="13px system-ui";
+        ctx.fillText(`A1 conf:${ann.conf.toFixed(2)}`,x+12,y-12);
+      }
+
+      function tick(){
+        const now=performance.now(),dt=now-lastFrameT;
+        lastFrameT=now;
+        if(dt>0)fps=0.9*fps+0.1*(1000/dt);
+        perfPill.textContent=`FPS: ${fps?fps.toFixed(1):"--"} | Lat: ${latencyMs} ms`;
+        confPill.textContent=`Conf: ${trackingOn?ann.conf.toFixed(2):"--"}`;
+        draw();requestAnimationFrame(tick);
+      }
+
+      playBtn.onclick=async()=>{if(video.paused){await video.play();playBtn.textContent="Pause";}else{video.pause();playBtn.textContent="Play";}};
+      addBtn.onclick=()=>{awaitingClick=true;trackingOn=false;setState("OFF");};
+      resetBtn.onclick=()=>{ann.x=ann.y=null;trackingOn=false;setState("OFF");};
+      stage.onclick=e=>{
+        if(!awaitingClick)return;
+        const r=video.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+        if(x<0||y<0||x>r.width||y>r.height)return;
+        ann.x=x;ann.y=y;anchorX=x;anchorY=y;smoothX=x;smoothY=y;
+        startTime=performance.now();awaitingClick=false;trackingOn=true;setState("TRACKING");
+      };
+      occBtn.onclick=()=>{if(trackingOn)occUntil=performance.now()+1400;};
+      oofBtn.onclick=()=>{if(trackingOn)oofUntil=performance.now()+1800;};
+      recBtn.onclick=()=>{occUntil=oofUntil=0;setState("REACQUIRED");};
+
+      video.onloadedmetadata=fitCanvas;
+      video.onloadeddata=fitCanvas;
+      window.onresize=fitCanvas;
+
+      requestAnimationFrame(tick);
+    </script>
+  </body>
+</html>
