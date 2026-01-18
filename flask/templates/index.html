@@ -109,7 +109,7 @@
         background:#000;
       }
       .stage{position:relative;}
-      video{width:100%;display:block;}
+      #video{width:100%;display:block;}
 
       canvas{position:absolute;left:0;top:0;}
       #overlay{pointer-events:none;}
@@ -337,13 +337,13 @@
         overflow: hidden;
       }
 
-      #video{
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  z-index: 1;
+     #video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        z-index: 1;
       }
       #overlay,
       #drawLayer {
@@ -381,7 +381,11 @@
           <!-- VIDEO -->
           <div class="panel">
             <div class="stage" id="stage">
-+              <video id="video" playsinline muted loop>
++              <img
+                id="video"
+                src="{{ url_for('stream') }}"
+                alt="Live video stream"
+              />
 +                <source src="{{ url_for('static', filename='sample.mp4') }}" type="video/mp4" />
 +              </video>
               <canvas id="overlay"></canvas>
@@ -916,16 +920,15 @@
       };
 
       function updateBrushLabel(){ brushVal.textContent = String(brushSize.value); }
-      brushSize.addEventListener('input', updateBrushLabel);
-      updateBrushLabel();
+      const streamSrc = video.getAttribute('src');
+      let streamActive = Boolean(streamSrc);
+      playBtn.textContent = streamActive ? "Pause" : "Play";
 
-      setTool(null);
-
-      // ---------- Controls ----------
-      playBtn.onclick = async () => {
-        if(video.paused){
-          try { await video.play(); } catch(e) {}
-          playBtn.textContent = "Pause";
+      playBtn.onclick = () => {
+        streamActive = !streamActive;
+        video.setAttribute('src', streamActive ? streamSrc : "");
+        playBtn.textContent = streamActive ? "Pause" : "Play";
+        log(streamActive ? "Stream resumed" : "Stream paused");
           log("Playback started");
         } else {
           video.pause();
@@ -1013,8 +1016,7 @@
       });
 
       // ---------- Start + Resize ----------
-      video.addEventListener('loadedmetadata', fitCanvases);
-      video.addEventListener('loadeddata', fitCanvases);
+      video.addEventListener('load', fitCanvases);
       window.addEventListener('resize', fitCanvases);
 
       log("UI ready. Tools: Add annotation → click video. Pen/Eraser to draw.");
@@ -1022,4 +1024,3 @@
     </script>
   </body>
 </html>
-
