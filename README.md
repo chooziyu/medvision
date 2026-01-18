@@ -6,6 +6,9 @@ Medical video feeds such as ultrasound, echocardiography, and laparoscopy are in
 
 Inspired by HoloRay’s mission to improve healthcare collaboration and learning, **MedVision** explores how **motion-tracked annotations** can make medical video interpretation clearer, more intuitive, and more reliable.
 
+<img width="1014" height="638" alt="Screenshot 2026-01-18 at 10 58 51 AM" src="https://github.com/user-attachments/assets/af5cfdc2-fd85-4ae2-a228-09f648456e23" />
+
+
 ## What It Does
 
 MedVision allows users to place annotations directly onto a medical video feed and keeps those annotations anchored to the same underlying anatomy as the video moves.
@@ -20,10 +23,8 @@ MedVision is built using a modular pipeline that adapts the tracking approach to
 
 For echocardiography, we use **YOLO-based segmentation** to identify and track anatomical structures.
 
-YOLO (You Only Look Once) segmentation models work by processing the entire image in a single forward pass of a convolutional neural network. Instead of scanning the image region by region, YOLO predicts:
+YOLO segmentation models work by processing the entire image in a single forward pass of a convolutional neural network. Instead of scanning the image region by region, YOLO predicts:
 
-* Object classes
-* Bounding boxes
 * Pixel-level segmentation masks
 
 This makes YOLO particularly well-suited for real-time medical video, where both speed and spatial accuracy are important. In echocardiography, segmentation masks allow annotations to be anchored to deformable cardiac structures rather than rigid points, enabling them to follow natural anatomical motion throughout the cardiac cycle.
@@ -64,14 +65,21 @@ These latencies can cause slight delays between the video motion and annotation 
 
 ## Challenges We Ran Into
 
-* Designing tracking that works well with **user-placed annotations**, which is significantly harder than tracking predefined objects
-* Maintaining precision and stability in the presence of:
+One of the biggest challenges was tracking **user-placed annotations** rather than predefined objects. Unlike standard object tracking, the system must generalize from arbitrary regions drawn by the user, which vary in size, shape, texture, and semantic meaning. This makes maintaining reliable correspondence significantly more difficult than tracking known object classes.
 
-  * Jitter and drift
-  * Occlusion
-  * Annotated regions temporarily leaving the frame
-* Integrating Python-based tracking logic with frontend visualization
-* Ensuring smooth, real-time updates that stayed synchronized with the video frame rate
+We also had to maintain **precision and stability** under challenging real-world conditions, including:
+
+- **Jitter and drift** caused by noise and small frame-to-frame inconsistencies  
+- **Occlusions**, where anatomical structures or tools are partially or fully hidden  
+- **Annotated regions temporarily leaving the frame** and later reappearing  
+
+Another major challenge was **bridging the backend and frontend**. Integrating Python-based tracking logic with real-time UI visualization required careful synchronization between video playback, annotation updates, and tracking state.
+
+Finally, meeting **real-time constraints** proved non-trivial. We needed to ensure smooth, frame-rate-aligned updates without visible lag or desynchronization, despite delays introduced by model inference, data transfer, and rendering.
+
+### Demo Plan (UI vs Backend)
+
+We encountered an issue where the notebook (`.ipynb`) rendering in the UI does not display correctly, even though the backend tracking pipeline functions as expected. Since the core tracking algorithms are working reliably, we will demo the **backend output** to clearly showcase the tracking performance, stability, and overall system behavior.
 
 ## Accomplishments
 
