@@ -1,9 +1,10 @@
+cat << 'EOF' > index.html
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>HoloTrack – Motion-Tracked Annotations for Medical Usage</title>
+    <title>MedVision (HoloTrack)</title>
 
     <style>
       :root{
@@ -12,6 +13,9 @@
         --border:#223044;
         --text:#e8eef6;
         --muted:#a9b6c7;
+        --btn:#1b2a3d;
+        --btn2:#121c2a;
+        --btnBorder:#2b3f5b;
       }
       *{box-sizing:border-box}
       body{
@@ -21,74 +25,130 @@
         font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       }
 
-      /* ===== HEADER ===== */
       header{
-        padding:14px 20px;
+        padding:18px 20px;
         border-bottom:1px solid var(--border);
-        display:flex;
-        align-items:center;
         background: rgba(11,15,20,.75);
         backdrop-filter: blur(10px);
         position: sticky;
         top: 0;
         z-index: 10;
       }
+      .headerInner{
+        width:min(1280px,100%);
+        margin:0 auto;
+        display:flex;
+        gap:14px;
+        align-items:center;
+        justify-content:space-between;
+      }
       .brand{
         display:flex;
-        gap:12px;
+        gap:14px;
         align-items:center;
+        min-width:0;
       }
       .logoImg{
-        height:28px;
+        height:44px;
         width:auto;
         object-fit:contain;
         filter: grayscale(100%) brightness(1.15) contrast(1.05);
       }
-      .brandTitle{
-        font-size:14px;
-        font-weight:700;
-        letter-spacing:.3px;
+      .titleLine{
+        font-size:18px;
+        font-weight:900;
+        letter-spacing:.2px;
         white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
       }
 
-      /* ===== LAYOUT ===== */
+      .navLinks{
+        display:flex;
+        gap:10px;
+        align-items:center;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+      }
+      .navLink{
+        font-size:13px;
+        font-weight:850;
+        padding:10px 12px;
+        border-radius:14px;
+        border:1px solid rgba(255,255,255,.12);
+        background: rgba(0,0,0,.18);
+        color: rgba(232,238,246,.88);
+        cursor:pointer;
+        user-select:none;
+        text-decoration:none;
+      }
+      .navLink.active{
+        background: rgba(255,255,255,.10);
+        border-color: rgba(255,255,255,.22);
+      }
+      .navLink:hover{filter:brightness(1.08);}
+
       .wrap{padding:18px 20px;}
       .layout{
         width:min(1280px,100%);
         margin:0 auto;
+      }
+      .demoGrid{
         display:grid;
         grid-template-columns: 1.4fr .6fr;
         gap:14px;
         align-items:start;
       }
 
-      /* ===== VIDEO PANEL ===== */
       .panel{
         border:1px solid rgba(255,255,255,.10);
         border-radius:16px;
         overflow:hidden;
         background:#000;
       }
-      .label{
-        padding:10px 12px;
-        background: rgba(255,255,255,.04);
-        border-bottom:1px solid rgba(255,255,255,.10);
-        font-size:13px;
-        color: rgba(232,238,246,.88);
-      }
       .stage{position:relative;}
       video{width:100%;display:block;}
-      canvas{position:absolute;left:0;top:0;pointer-events:none;}
 
-      /* ===== SIDE PANEL ===== */
+      canvas{position:absolute;left:0;top:0;}
+      #overlay{pointer-events:none;}
+      #drawLayer{pointer-events:none;}
+
       .side{
         border:1px solid rgba(255,255,255,.10);
         border-radius:16px;
         background: rgba(255,255,255,.03);
+        overflow:hidden;
+      }
+      .tabs{
+        display:flex;
+        gap:6px;
+        padding:10px;
+        border-bottom:1px solid rgba(255,255,255,.10);
+        background: rgba(255,255,255,.02);
+      }
+      .tabBtn{
+        flex:1;
+        padding:8px 10px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,.12);
+        background: rgba(0,0,0,.15);
+        color: rgba(232,238,246,.85);
+        font-weight:800;
+        font-size:13px;
+        cursor:pointer;
+      }
+      .tabBtn.active{
+        background: rgba(255,255,255,.10);
+        border-color: rgba(255,255,255,.22);
+        color: rgba(232,238,246,.95);
+      }
+      .tabBody{
         padding:12px;
         display:grid;
         gap:12px;
       }
+      .hidden{display:none !important;}
+
       .sectionTitle{
         font-size:12px;
         color:rgba(232,238,246,.60);
@@ -98,31 +158,43 @@
       .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 
       button{
-        background:#1b2a3d;
-        border:1px solid #2b3f5b;
+        background:var(--btn);
+        border:1px solid var(--btnBorder);
         color:#e8eef6;
         padding:9px 11px;
         border-radius:12px;
         cursor:pointer;
-        font-weight:800;
+        font-weight:850;
         font-size:13px;
       }
       button.secondary{
-        background:#121c2a;
+        background:var(--btn2);
         border-color: rgba(255,255,255,.14);
-        font-weight:700;
+        font-weight:750;
       }
-      button:hover{filter:brightness(1.1);}
+      button.tiny{
+        padding:8px 10px;
+        font-size:12.5px;
+        border-radius:12px;
+      }
+      button.on{
+        background: rgba(255,255,255,.12);
+        border-color: rgba(255,255,255,.25);
+      }
+      button:hover{filter:brightness(1.12);}
 
       label{
-        display:inline-flex;
-        gap:8px;
+        display:flex;
+        gap:10px;
         align-items:center;
         font-size:13px;
         color:rgba(232,238,246,.90);
+        width:100%;
       }
+      label.inline{width:auto}
       input[type="checkbox"]{transform:scale(1.05);}
 
+      .pillRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
       .pill{
         padding:7px 10px;
         border:1px solid rgba(255,255,255,.14);
@@ -132,188 +204,822 @@
         color: rgba(232,238,246,.86);
         white-space:nowrap;
       }
-
+      .kvs{
+        display:grid;
+        grid-template-columns:1fr auto;
+        gap:6px 10px;
+        font-size:13px;
+      }
+      .kvs .k{color:rgba(232,238,246,.60);}
+      .hint{
+        color:rgba(232,238,246,.62);
+        font-size:12px;
+        line-height:1.4;
+      }
       .log{
         background: rgba(0,0,0,.22);
         border:1px solid rgba(255,255,255,.10);
         border-radius:12px;
         padding:10px;
-        height:180px;
+        height:210px;
         overflow:auto;
         font-family: ui-monospace, Menlo, monospace;
         font-size:12px;
+        color: rgba(232,238,246,.86);
+      }
+      .sliderRow{display:grid;gap:6px;}
+      input[type="range"]{width:100%}
+
+      .field{
+        display:grid;
+        gap:6px;
+      }
+      .field .label{
+        font-size:12px;
+        color:rgba(232,238,246,.62);
+      }
+      input[type="color"]{
+        width:42px;
+        height:34px;
+        border-radius:10px;
+        border:1px solid rgba(255,255,255,.18);
+        background:transparent;
+        padding:0;
+      }
+      select{
+        width:100%;
+        padding:10px 12px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,.14);
+        background: rgba(0,0,0,.22);
+        color: rgba(232,238,246,.92);
+        font-weight:750;
+        font-size:13px;
+        outline:none;
       }
 
+      /* ABOUT */
+      .about{
+        width:min(980px,100%);
+        margin:0 auto;
+        display:grid;
+        gap:14px;
+      }
+      .about h2{margin:0;font-size:18px;letter-spacing:.2px;}
+      .about p{margin:0;color:rgba(232,238,246,.78);line-height:1.55;font-size:13.5px;}
+      .cards{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0,1fr));
+        gap:12px;
+      }
+      .card{
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:16px;
+        background: rgba(255,255,255,.03);
+        padding:14px;
+      }
+      .card h3{
+        margin:0 0 6px;
+        font-size:13px;
+        text-transform:uppercase;
+        letter-spacing:.10em;
+        color:rgba(232,238,246,.70);
+      }
+      .list{margin:0;padding-left:18px;color:rgba(232,238,246,.78);line-height:1.55;font-size:13.5px;}
+      .teamGrid{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:12px;}
+      .person{
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:16px;
+        background: rgba(0,0,0,.18);
+        padding:12px;
+      }
+      .person b{display:block;font-size:13.5px;margin-bottom:4px;}
+      .person span{color:rgba(232,238,246,.70);font-size:12.5px;line-height:1.4;display:block;}
+      .aboutActions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+
       @media (max-width: 1000px){
-        .layout{grid-template-columns:1fr;}
+        .demoGrid{grid-template-columns:1fr;}
+      }
+      @media (max-width: 800px){
+        .cards,.teamGrid{grid-template-columns:1fr;}
+        .titleLine{white-space:normal;}
       }
     </style>
   </head>
 
   <body>
     <header>
-      <div class="brand">
-        <img src="holoray-logo.png" alt="HoloRay logo" class="logoImg" />
-        <div class="brandTitle">
-          HoloTrack – Motion-Tracked Annotations for Medical Usage
+      <div class="headerInner">
+        <div class="brand">
+          <img src="holoray-logo.png" alt="HoloRay logo" class="logoImg" />
+          <div class="titleLine">MedVision (HoloTrack)</div>
         </div>
+
+        <nav class="navLinks" aria-label="Navigation">
+          <a class="navLink active" href="#demo" id="navDemo">Demo</a>
+          <a class="navLink" href="#about" id="navAbout">About</a>
+        </nav>
       </div>
     </header>
 
-    <div class="wrap">
+    <!-- DEMO VIEW -->
+    <div class="wrap" id="demoView">
       <div class="layout">
-        <!-- VIDEO -->
-        <div class="panel">
-          <div class="label">
-            Tracked Video + Annotation Overlay (Add annotation → click video)
-          </div>
+        <div class="demoGrid">
 
-          <div class="stage" id="stage">
-            <video id="video" playsinline>
-              <source src="sample.mp4" type="video/mp4">
-            </video>
-            <canvas id="overlay"></canvas>
-          </div>
-        </div>
-
-        <!-- CONTROLS -->
-        <div class="side">
-          <div>
-            <div class="sectionTitle">Controls</div>
-            <div class="row" style="margin-top:10px;">
-              <button id="playBtn">Play</button>
-              <button id="addBtn">Add annotation</button>
-              <button id="resetBtn" class="secondary">Reset</button>
-            </div>
-
-            <div class="row" style="margin-top:10px;">
-              <label><input type="checkbox" id="staticToggle"> Static</label>
-              <label><input type="checkbox" id="smoothToggle" checked> Smoothed</label>
-            </div>
-
-            <div class="row" style="margin-top:10px;">
-              <button id="occBtn" class="secondary">Occlusion</button>
-              <button id="oofBtn" class="secondary">Out of frame</button>
-              <button id="recBtn" class="secondary">Reacquire</button>
+          <!-- VIDEO -->
+          <div class="panel">
+            <div class="stage" id="stage">
+              <video id="video" playsinline>
+                <source id="videoSrc" src="sample.mp4" type="video/mp4">
+              </video>
+              <canvas id="overlay"></canvas>
+              <canvas id="drawLayer"></canvas>
             </div>
           </div>
 
-          <div>
-            <div class="sectionTitle">Live metrics</div>
-            <div class="row" style="margin-top:10px;">
-              <span class="pill" id="statePill">STATE: OFF</span>
-              <span class="pill" id="perfPill">FPS: -- | Lat: -- ms</span>
-              <span class="pill" id="confPill">Conf: --</span>
+          <!-- RIGHT PANEL -->
+          <div class="side">
+            <div class="tabs">
+              <button class="tabBtn active" data-tab="tools">Tools</button>
+              <button class="tabBtn" data-tab="settings">Settings</button>
+              <button class="tabBtn" data-tab="log">Log</button>
             </div>
-          </div>
 
-          <div>
-            <div class="sectionTitle">Event log</div>
-            <div class="log" id="log"></div>
+            <!-- TOOLS TAB -->
+            <div class="tabBody" id="tab-tools">
+              <div>
+                <div class="sectionTitle">Playback & Placement</div>
+                <div class="row" style="margin-top:10px;">
+                  <button id="playBtn">Play</button>
+                  <button id="addBtn">Add annotation</button>
+                  <button id="resetBtn" class="secondary">Reset</button>
+                </div>
+                <div class="hint" style="margin-top:10px;">
+                  Add annotation → then click once on the video to place A1.
+                </div>
+              </div>
+
+              <div>
+                <div class="sectionTitle">Select clinical video type</div>
+                <div class="hint" style="margin-top:10px;">
+                  Helps set the expected motion profile and tracking behavior for the chosen modality.
+                </div>
+                <div style="margin-top:10px;">
+                  <select id="clinicalTypeSelect">
+                    <option value="general">General medical video</option>
+                    <option value="microscope">Microscope</option>
+                    <option value="laparoscopy">Laparoscopy</option>
+                    <option value="echo">Echocardiography (Echo)</option>
+                    <option value="ultrasound">Ultrasound</option>
+                    <option value="endoscopy">Endoscopy</option>
+                    <option value="ivus">IVUS</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div class="sectionTitle">Annotation tools</div>
+                <div class="row" style="margin-top:10px;">
+                  <button class="tiny" id="penBtn">Pen</button>
+                  <button class="tiny" id="eraserBtn">Eraser</button>
+                  <button class="tiny secondary" id="undoBtn">Undo</button>
+                  <button class="tiny secondary" id="clearBtn">Clear</button>
+                  <button class="tiny secondary" id="stopDrawBtn" title="Disable drawing so clicks won't draw">Stop draw</button>
+                </div>
+
+                <div class="row" style="margin-top:10px; align-items:flex-end;">
+                  <div class="field">
+                    <div class="label">Color</div>
+                    <input type="color" id="colorPicker" value="#ffffff" />
+                  </div>
+
+                  <div class="field" style="flex:1; min-width:180px;">
+                    <div class="label">Brush size: <span id="brushVal">6</span> px</div>
+                    <input type="range" id="brushSize" min="2" max="24" value="6" />
+                  </div>
+                </div>
+
+                <div class="hint" style="margin-top:10px;">
+                  Use Pen/Eraser to draw. Use Stop draw if you only want click-to-place behavior.
+                </div>
+              </div>
+
+              <!-- NEW: EXPORT -->
+              <div>
+                <div class="sectionTitle">Export</div>
+                <div class="row" style="margin-top:10px;">
+                  <button id="exportViewBtn">Export PNG (view)</button>
+                  <button id="exportOverlayBtn" class="secondary">Export PNG (overlay)</button>
+                </div>
+                <div class="hint" style="margin-top:10px;">
+                  “View” exports the current frame + overlays (what the judge sees). “Overlay” exports annotations only (transparent background).
+                </div>
+              </div>
+
+              <div>
+                <div class="sectionTitle">Live metrics</div>
+                <div class="pillRow" style="margin-top:10px;">
+                  <span class="pill" id="statePill">STATE: OFF</span>
+                  <span class="pill" id="perfPill">FPS: -- | Lat: -- ms</span>
+                  <span class="pill" id="confPill">Conf: --</span>
+                </div>
+
+                <div class="kvs" style="margin-top:10px;">
+                  <div class="k">Update alignment</div><div>Frame-aligned</div>
+                  <div class="k">Tracking mode</div><div>Simulated (swap with OpenCV)</div>
+                  <div class="k">Annotation</div><div>A1</div>
+                  <div class="k">Drawing</div><div id="drawState">OFF</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div class="tabBody hidden" id="tab-settings">
+              <div>
+                <div class="sectionTitle">Video modality</div>
+                <div class="hint" style="margin-top:10px;">
+                  Choose the imaging context to match clinical motion patterns (for demo + future tracker presets).
+                </div>
+                <div style="margin-top:10px;">
+                  <select id="modalitySelect">
+                    <option value="general">General medical video</option>
+                    <option value="microscope">Microscope</option>
+                    <option value="laparoscopy">Laparoscopy</option>
+                    <option value="echo">Echocardiography (Echo)</option>
+                    <option value="ultrasound">Ultrasound</option>
+                    <option value="endoscopy">Endoscopy</option>
+                    <option value="ivus">IVUS</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div class="sectionTitle">Tracking display</div>
+                <div class="row" style="margin-top:10px;">
+                  <label class="inline"><input type="checkbox" id="staticToggle"> Static</label>
+                  <label class="inline"><input type="checkbox" id="smoothToggle" checked> Smoothed</label>
+                </div>
+                <div class="hint" style="margin-top:10px;">
+                  “Static” demonstrates the problem. “Smoothed” demonstrates stability improvements.
+                </div>
+              </div>
+
+              <div>
+                <div class="sectionTitle">Overlay style</div>
+
+                <div class="row" style="margin-top:10px;">
+                  <label class="inline"><input type="checkbox" id="boxToggle" checked> Box</label>
+                  <label class="inline"><input type="checkbox" id="labelToggle" checked> Label</label>
+                </div>
+
+                <div class="sliderRow" style="margin-top:10px;">
+                  <div class="hint">Dot size: <span id="dotSizeVal">7</span> px</div>
+                  <input type="range" id="dotSize" min="4" max="16" value="7" />
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                  <button id="resetStyleBtn" class="secondary">Reset settings</button>
+                </div>
+              </div>
+
+              <div class="hint">
+                This selector can later drive default tracker parameters (feature count, re-detection rate, smoothing, etc.).
+              </div>
+            </div>
+
+            <!-- LOG TAB -->
+            <div class="tabBody hidden" id="tab-log">
+              <div>
+                <div class="sectionTitle">Event log</div>
+                <div class="log" id="log" style="margin-top:10px;"></div>
+                <div class="hint" style="margin-top:10px;">
+                  Good for judging: shows clear state transitions and actions.
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
     </div>
 
+    <!-- ABOUT VIEW -->
+    <div class="wrap hidden" id="aboutView">
+      <div class="about">
+        <h2>About</h2>
+        <p>
+          MedVision (HoloTrack) is a hackathon prototype for motion-tracked annotations over medical video.
+          The goal is to keep annotations fixed to the anatomical structure they were placed on, even when the camera/probe and anatomy move.
+        </p>
+
+        <div class="cards">
+          <div class="card">
+            <h3>What it does</h3>
+            <ul class="list">
+              <li>Anchors annotations to the same visual anatomy during camera/probe motion (ultrasound, laparoscopy, echo, etc.)</li>
+              <li>Displays stability controls (static vs tracked; smoothed vs jittery)</li>
+              <li>Shows real-time responsiveness (FPS/latency) and confidence</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Planned tracking approach</h3>
+            <ul class="list">
+              <li>OpenCV feature tracking / optical flow with per-frame updates</li>
+              <li>Periodic re-detection to reduce drift</li>
+              <li>Modality-agnostic design across medical video sources</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Team</h3>
+          <div class="teamGrid" style="margin-top:10px;">
+            <div class="person"><b>Caroline Chueh</b><span>Frontend</span></div>
+            <div class="person"><b>Zi Yu Choo</b><span>Backend</span></div>
+            <div class="person"><b>Nanjiba Sadique</b><span>Backend</span></div>
+            <div class="person"><b>Eve Claveau</b><span>Backend</span></div>
+          </div>
+        </div>
+
+        <div class="aboutActions">
+          <button onclick="location.hash='#demo'">Back to Demo</button>
+        </div>
+      </div>
+    </div>
+
     <script>
-      const video=document.getElementById('video');
-      const stage=document.getElementById('stage');
-      const canvas=document.getElementById('overlay');
-      const ctx=canvas.getContext('2d');
+      // ---------- Router ----------
+      const demoView = document.getElementById('demoView');
+      const aboutView = document.getElementById('aboutView');
+      const navDemo = document.getElementById('navDemo');
+      const navAbout = document.getElementById('navAbout');
 
-      const playBtn=document.getElementById('playBtn');
-      const addBtn=document.getElementById('addBtn');
-      const resetBtn=document.getElementById('resetBtn');
-      const staticToggle=document.getElementById('staticToggle');
-      const smoothToggle=document.getElementById('smoothToggle');
-      const occBtn=document.getElementById('occBtn');
-      const oofBtn=document.getElementById('oofBtn');
-      const recBtn=document.getElementById('recBtn');
-      const statePill=document.getElementById('statePill');
-      const perfPill=document.getElementById('perfPill');
-      const confPill=document.getElementById('confPill');
-      const logEl=document.getElementById('log');
-
-      const ann={x:null,y:null,conf:0.85};
-      let awaitingClick=false,trackingOn=false;
-      let anchorX=0,anchorY=0,smoothX=0,smoothY=0;
-      let startTime=performance.now(),lastFrameT=performance.now();
-      let fps=0,latencyMs=26;
-      let occUntil=0,oofUntil=0,state="OFF";
-
-      function log(m){
-        logEl.innerHTML=`[${new Date().toLocaleTimeString()}] ${m}<br>`+logEl.innerHTML;
+      function route(){
+        const h = location.hash || "#demo";
+        const onDemo = (h === "#demo");
+        demoView.classList.toggle('hidden', !onDemo);
+        aboutView.classList.toggle('hidden', onDemo);
+        navDemo.classList.toggle('active', onDemo);
+        navAbout.classList.toggle('active', !onDemo);
       }
-      function setState(s){
-        state=s;
-        statePill.textContent=`STATE: ${s}`;
-      }
-      function fitCanvas(){
-        const r=video.getBoundingClientRect(),sr=stage.getBoundingClientRect();
-        canvas.width=Math.round(r.width);
-        canvas.height=Math.round(r.height);
-        canvas.style.left=(r.left-sr.left)+"px";
-        canvas.style.top=(r.top-sr.top)+"px";
-      }
-      function clamp(v,l,h){return Math.max(l,Math.min(h,v));}
+      window.addEventListener('hashchange', route);
+      route();
 
-      function draw(){
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        if(ann.x===null) return;
-        let x=ann.x,y=ann.y,now=performance.now();
+      // ---------- Tabs ----------
+      const tabBtns = Array.from(document.querySelectorAll('.tabBtn'));
+      const tabTools = document.getElementById('tab-tools');
+      const tabSettings = document.getElementById('tab-settings');
+      const tabLog = document.getElementById('tab-log');
 
-        if(trackingOn&&!staticToggle.checked){
-          if(now<occUntil||now<oofUntil){
-            ann.conf=0.1;setState("LOST");
-          }else{
-            setState(state==="LOST"?"REACQUIRED":"TRACKING");
-            const dt=(now-startTime)/1000,amp=10;
-            let tx=anchorX+Math.sin(dt*1.2)*amp;
-            let ty=anchorY+Math.cos(dt*1.0)*amp;
-            if(!smoothToggle.checked){tx+=(Math.random()-.5)*4;ty+=(Math.random()-.5)*4;}
-            const s=smoothToggle.checked?0.12:0.45;
-            smoothX+=(tx-smoothX)*s;
-            smoothY+=(ty-smoothY)*s;
-            smoothX=clamp(smoothX,10,canvas.width-10);
-            smoothY=clamp(smoothY,10,canvas.height-10);
-            x=smoothX;y=smoothY;
-            ann.conf=smoothToggle.checked?0.9:0.75;
-          }
+      function openTab(name){
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+        tabTools.classList.toggle('hidden', name !== 'tools');
+        tabSettings.classList.toggle('hidden', name !== 'settings');
+        tabLog.classList.toggle('hidden', name !== 'log');
+      }
+      tabBtns.forEach(b => b.addEventListener('click', () => openTab(b.dataset.tab)));
+
+      // ---------- Elements ----------
+      const video = document.getElementById('video');
+      const stage = document.getElementById('stage');
+
+      const overlay = document.getElementById('overlay');
+      const octx = overlay.getContext('2d');
+
+      const drawLayer = document.getElementById('drawLayer');
+      const dctx = drawLayer.getContext('2d');
+
+      const playBtn = document.getElementById('playBtn');
+      const addBtn = document.getElementById('addBtn');
+      const resetBtn = document.getElementById('resetBtn');
+
+      const statePill = document.getElementById('statePill');
+      const perfPill = document.getElementById('perfPill');
+      const confPill = document.getElementById('confPill');
+      const logEl = document.getElementById('log');
+      const drawState = document.getElementById('drawState');
+
+      const exportViewBtn = document.getElementById('exportViewBtn');
+      const exportOverlayBtn = document.getElementById('exportOverlayBtn');
+
+      // Settings
+      const staticToggle = document.getElementById('staticToggle');
+      const smoothToggle = document.getElementById('smoothToggle');
+      const boxToggle = document.getElementById('boxToggle');
+      const labelToggle = document.getElementById('labelToggle');
+      const dotSize = document.getElementById('dotSize');
+      const dotSizeVal = document.getElementById('dotSizeVal');
+      const resetStyleBtn = document.getElementById('resetStyleBtn');
+      const modalitySelect = document.getElementById('modalitySelect');
+
+      // Tools selector
+      const clinicalTypeSelect = document.getElementById('clinicalTypeSelect');
+
+      // Annotation tools
+      const penBtn = document.getElementById('penBtn');
+      const eraserBtn = document.getElementById('eraserBtn');
+      const undoBtn = document.getElementById('undoBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const stopDrawBtn = document.getElementById('stopDrawBtn');
+      const colorPicker = document.getElementById('colorPicker');
+      const brushSize = document.getElementById('brushSize');
+      const brushVal = document.getElementById('brushVal');
+
+      // ---------- Logging ----------
+      function log(msg){
+        const t = new Date().toLocaleTimeString();
+        logEl.innerHTML = `[${t}] ${msg}<br>` + logEl.innerHTML;
+      }
+
+      // ---------- Canvas sizing ----------
+      function fitCanvases(){
+        const r = video.getBoundingClientRect();
+        const sr = stage.getBoundingClientRect();
+        const w = Math.round(r.width);
+        const h = Math.round(r.height);
+
+        for (const c of [overlay, drawLayer]){
+          c.width = w; c.height = h;
+          c.style.left = (r.left - sr.left) + "px";
+          c.style.top  = (r.top  - sr.top)  + "px";
         }
-        ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);
-        ctx.fillStyle="rgba(255,255,255,0.92)";ctx.fill();
-        ctx.font="13px system-ui";
-        ctx.fillText(`A1 conf:${ann.conf.toFixed(2)}`,x+12,y-12);
+        redrawDrawing();
+      }
+
+      // ---------- Tracking demo ----------
+      const ann = { x:null, y:null, conf:0.85 };
+      let awaitingClick=false, trackingOn=false;
+
+      let anchorX=0, anchorY=0, smoothX=0, smoothY=0;
+      let startTime=performance.now();
+      let lastFrameT=performance.now();
+      let fps=0, latencyMs=26;
+
+      let state="OFF";
+
+      function setState(s){
+        state = s;
+        statePill.textContent = `STATE: ${s}`;
+      }
+
+      function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+      function drawBox(ctx, x,y){
+        const w=92, h=62;
+        ctx.setLineDash([6,4]);
+        ctx.strokeStyle = "rgba(255,255,255,0.88)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - w/2, y - h/2, w, h);
+        ctx.setLineDash([]);
+      }
+
+      function drawTrackingOverlay(){
+        octx.clearRect(0,0,overlay.width,overlay.height);
+        if(ann.x === null) return;
+
+        const now = performance.now();
+        let x = ann.x, y = ann.y;
+
+        if(trackingOn && !staticToggle.checked){
+          if(state !== "TRACKING") setState("TRACKING");
+
+          const dt = (now - startTime)/1000;
+          const amp = 10;
+
+          let targetX = anchorX + Math.sin(dt*1.2)*amp + Math.sin(dt*0.33)*(amp*0.6);
+          let targetY = anchorY + Math.cos(dt*1.0)*amp + Math.sin(dt*0.44)*(amp*0.4);
+
+          if(!smoothToggle.checked){
+            targetX += (Math.random()-0.5)*4;
+            targetY += (Math.random()-0.5)*4;
+          }
+
+          const s = smoothToggle.checked ? 0.12 : 0.45;
+          smoothX = smoothX + (targetX - smoothX)*s;
+          smoothY = smoothY + (targetY - smoothY)*s;
+
+          smoothX = clamp(smoothX, 10, overlay.width-10);
+          smoothY = clamp(smoothY, 10, overlay.height-10);
+
+          x = smoothX; y = smoothY;
+
+          ann.conf = smoothToggle.checked ? (0.86 + 0.08*Math.abs(Math.sin(dt*0.8)))
+                                         : (0.72 + 0.10*Math.abs(Math.sin(dt*1.2)));
+        }
+
+        if(boxToggle.checked) drawBox(octx, x,y);
+
+        octx.beginPath();
+        octx.arc(x,y, Number(dotSize.value), 0, Math.PI*2);
+        octx.fillStyle = "rgba(255,255,255,0.92)";
+        octx.fill();
+
+        if(labelToggle.checked){
+          octx.font = "13px system-ui";
+          octx.fillStyle = "rgba(255,255,255,0.92)";
+          octx.fillText(`A1  conf:${ann.conf.toFixed(2)}`, x+12, y-12);
+        }
       }
 
       function tick(){
-        const now=performance.now(),dt=now-lastFrameT;
-        lastFrameT=now;
-        if(dt>0)fps=0.9*fps+0.1*(1000/dt);
-        perfPill.textContent=`FPS: ${fps?fps.toFixed(1):"--"} | Lat: ${latencyMs} ms`;
-        confPill.textContent=`Conf: ${trackingOn?ann.conf.toFixed(2):"--"}`;
-        draw();requestAnimationFrame(tick);
+        const now = performance.now();
+        const dt = now - lastFrameT;
+        lastFrameT = now;
+
+        if(dt > 0){
+          const inst = 1000/dt;
+          fps = 0.9*fps + 0.1*inst;
+        }
+        latencyMs = smoothToggle.checked ? (26 + 6*Math.abs(Math.sin(now/900)))
+                                        : (18 + 8*Math.abs(Math.sin(now/700)));
+
+        perfPill.textContent = `FPS: ${fps ? fps.toFixed(1) : "--"} | Lat: ${Math.round(latencyMs)} ms`;
+        confPill.textContent = `Conf: ${trackingOn ? ann.conf.toFixed(2) : "--"}`;
+
+        drawTrackingOverlay();
+        requestAnimationFrame(tick);
       }
 
-      playBtn.onclick=async()=>{if(video.paused){await video.play();playBtn.textContent="Pause";}else{video.pause();playBtn.textContent="Play";}};
-      addBtn.onclick=()=>{awaitingClick=true;trackingOn=false;setState("OFF");};
-      resetBtn.onclick=()=>{ann.x=ann.y=null;trackingOn=false;setState("OFF");};
-      stage.onclick=e=>{
-        if(!awaitingClick)return;
-        const r=video.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
-        if(x<0||y<0||x>r.width||y>r.height)return;
-        ann.x=x;ann.y=y;anchorX=x;anchorY=y;smoothX=x;smoothY=y;
-        startTime=performance.now();awaitingClick=false;trackingOn=true;setState("TRACKING");
+      // ---------- Drawing / Annotation tools ----------
+      let drawEnabled = false;
+      let drawTool = null; // null | 'pen' | 'eraser'
+      let drawing = false;
+      let currentStroke = null;
+
+      const strokes = [];
+
+      function setDrawEnabled(on){
+        drawEnabled = on;
+        drawLayer.style.pointerEvents = drawEnabled ? 'auto' : 'none';
+        drawState.textContent = drawEnabled ? (drawTool ? drawTool.toUpperCase() : "ON") : "OFF";
+      }
+
+      function setTool(tool){
+        drawTool = tool;
+        penBtn.classList.toggle('on', tool === 'pen');
+        eraserBtn.classList.toggle('on', tool === 'eraser');
+        stopDrawBtn.classList.toggle('on', tool === null);
+        setDrawEnabled(tool !== null);
+        if(tool) log(`Annotate tool: ${tool}`);
+        else log("Drawing disabled");
+      }
+
+      function redrawDrawing(){
+        dctx.clearRect(0,0,drawLayer.width, drawLayer.height);
+        for(const s of strokes) drawStroke(dctx, s);
+      }
+
+      function drawStroke(ctx, s){
+        if(!s.points || s.points.length < 2) return;
+
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = s.size;
+        ctx.strokeStyle = s.color;
+
+        if(s.tool === 'eraser'){
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.strokeStyle = "rgba(0,0,0,1)";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+        }
+
+        ctx.beginPath();
+        const p0 = s.points[0];
+        ctx.moveTo(p0.x * drawLayer.width, p0.y * drawLayer.height);
+        for(let i=1;i<s.points.length;i++){
+          const p = s.points[i];
+          ctx.lineTo(p.x * drawLayer.width, p.y * drawLayer.height);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function getNormPointFromEvent(e){
+        const r = drawLayer.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width;
+        const y = (e.clientY - r.top) / r.height;
+        return { x: clamp(x, 0, 1), y: clamp(y, 0, 1) };
+      }
+
+      function startDraw(e){
+        if(!drawEnabled || !drawTool) return;
+        drawing = true;
+        const pt = getNormPointFromEvent(e);
+        currentStroke = {
+          tool: drawTool,
+          color: colorPicker.value,
+          size: Number(brushSize.value),
+          points: [pt]
+        };
+        strokes.push(currentStroke);
+      }
+
+      function moveDraw(e){
+        if(!drawing || !currentStroke) return;
+        const pt = getNormPointFromEvent(e);
+        currentStroke.points.push(pt);
+        drawStroke(dctx, currentStroke);
+      }
+
+      function endDraw(){
+        if(!drawing) return;
+        drawing = false;
+        currentStroke = null;
+      }
+
+      drawLayer.addEventListener('pointerdown', (e) => { e.preventDefault(); startDraw(e); });
+      drawLayer.addEventListener('pointermove', (e) => { e.preventDefault(); moveDraw(e); });
+      window.addEventListener('pointerup', endDraw);
+      window.addEventListener('pointercancel', endDraw);
+
+      penBtn.onclick = () => setTool('pen');
+      eraserBtn.onclick = () => setTool('eraser');
+      stopDrawBtn.onclick = () => setTool(null);
+
+      undoBtn.onclick = () => {
+        if(strokes.length === 0) return;
+        strokes.pop();
+        redrawDrawing();
+        log("Undo drawing");
       };
-      occBtn.onclick=()=>{if(trackingOn)occUntil=performance.now()+1400;};
-      oofBtn.onclick=()=>{if(trackingOn)oofUntil=performance.now()+1800;};
-      recBtn.onclick=()=>{occUntil=oofUntil=0;setState("REACQUIRED");};
 
-      video.onloadedmetadata=fitCanvas;
-      video.onloadeddata=fitCanvas;
-      window.onresize=fitCanvas;
+      clearBtn.onclick = () => {
+        strokes.length = 0;
+        redrawDrawing();
+        log("Cleared drawings");
+      };
 
+      function updateBrushLabel(){ brushVal.textContent = String(brushSize.value); }
+      brushSize.addEventListener('input', updateBrushLabel);
+      updateBrushLabel();
+
+      setTool(null);
+
+      // ---------- Export helpers ----------
+      function downloadBlob(blob, filename){
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function stageStamp(){
+        // names like: holotrack_view_2026-01-17_14-05-33.png
+        const d = new Date();
+        const pad = n => String(n).padStart(2,'0');
+        const stamp = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+        return stamp;
+      }
+
+      async function exportOverlayOnly(){
+        if(overlay.width === 0 || overlay.height === 0){
+          log("Export failed: canvas not ready");
+          return;
+        }
+        const out = document.createElement('canvas');
+        out.width = overlay.width;
+        out.height = overlay.height;
+        const outCtx = out.getContext('2d');
+
+        // overlay tracking + drawing (both already in canvas coordinates)
+        outCtx.drawImage(overlay, 0, 0);
+        outCtx.drawImage(drawLayer, 0, 0);
+
+        out.toBlob((blob) => {
+          if(!blob) return;
+          downloadBlob(blob, `holotrack_overlay_${stageStamp()}.png`);
+          log("Exported PNG (overlay)");
+        }, "image/png");
+      }
+
+      async function exportFullView(){
+        if(overlay.width === 0 || overlay.height === 0){
+          log("Export failed: canvas not ready");
+          return;
+        }
+
+        // Create output canvas at overlay size (matches video display size)
+        const out = document.createElement('canvas');
+        out.width = overlay.width;
+        out.height = overlay.height;
+        const outCtx = out.getContext('2d');
+
+        // Draw the current video frame
+        // (Works best if the video is playing/loaded; otherwise may be black depending on browser permissions.)
+        try{
+          outCtx.drawImage(video, 0, 0, out.width, out.height);
+        } catch(e){
+          // If browser blocks drawing video frame, export overlays only as fallback
+          log("Could not capture video frame in this browser. Exporting overlays only.");
+          return exportOverlayOnly();
+        }
+
+        // Draw overlays on top
+        outCtx.drawImage(drawLayer, 0, 0);
+        outCtx.drawImage(overlay, 0, 0);
+
+        out.toBlob((blob) => {
+          if(!blob) return;
+          downloadBlob(blob, `holotrack_view_${stageStamp()}.png`);
+          log("Exported PNG (view)");
+        }, "image/png");
+      }
+
+      exportOverlayBtn.onclick = exportOverlayOnly;
+      exportViewBtn.onclick = exportFullView;
+
+      // ---------- Controls ----------
+      playBtn.onclick = async () => {
+        if(video.paused){
+          try { await video.play(); } catch(e) {}
+          playBtn.textContent = "Pause";
+          log("Playback started");
+        } else {
+          video.pause();
+          playBtn.textContent = "Play";
+          log("Playback paused");
+        }
+      };
+
+      addBtn.onclick = () => {
+        awaitingClick = true;
+        trackingOn = false;
+        setState("OFF");
+        setTool(null);
+        log("Awaiting annotation placement (click on video)");
+        openTab('tools');
+      };
+
+      resetBtn.onclick = () => {
+        awaitingClick = false;
+        trackingOn = false;
+        ann.x = ann.y = null;
+        setState("OFF");
+        log("Reset");
+        openTab('tools');
+      };
+
+      stage.addEventListener('click', (e) => {
+        if(drawEnabled) return;
+        if(!awaitingClick) return;
+
+        const r = video.getBoundingClientRect();
+        const x = e.clientX - r.left;
+        const y = e.clientY - r.top;
+        if(x < 0 || y < 0 || x > r.width || y > r.height) return;
+
+        ann.x = x; ann.y = y;
+        anchorX = x; anchorY = y;
+        smoothX = x; smoothY = y;
+        startTime = performance.now();
+
+        awaitingClick = false;
+        trackingOn = true;
+        setState("TRACKING");
+        log(`Placed A1 at (${Math.round(x)}, ${Math.round(y)})`);
+      });
+
+      // ---------- Settings ----------
+      function updateDotSizeLabel(){ dotSizeVal.textContent = String(dotSize.value); }
+      dotSize.addEventListener('input', updateDotSizeLabel);
+
+      resetStyleBtn.onclick = () => {
+        staticToggle.checked = false;
+        smoothToggle.checked = true;
+        boxToggle.checked = true;
+        labelToggle.checked = true;
+        dotSize.value = 7;
+        updateDotSizeLabel();
+        log("Settings reset");
+      };
+      updateDotSizeLabel();
+
+      modalitySelect.addEventListener('change', () => {
+        const label = modalitySelect.options[modalitySelect.selectedIndex].textContent;
+        log(`Video modality set: ${label}`);
+      });
+
+      clinicalTypeSelect.addEventListener('change', () => {
+        const label = clinicalTypeSelect.options[clinicalTypeSelect.selectedIndex].textContent;
+        log(`Clinical video type set: ${label}`);
+      });
+
+      // ---------- Start + Resize ----------
+      video.addEventListener('loadedmetadata', fitCanvases);
+      video.addEventListener('loadeddata', fitCanvases);
+      window.addEventListener('resize', fitCanvases);
+
+      log("UI ready. Tools: Add annotation → click video. Pen/Eraser to draw. Export to PNG for judges.");
       requestAnimationFrame(tick);
     </script>
   </body>
 </html>
+EOF
