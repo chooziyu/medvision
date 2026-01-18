@@ -381,6 +381,19 @@
                   Add annotation → then click once on the video to place A1.
                 </div>
               </div>
+
+              <div>
+                <div class="sectionTitle">Robustness (edge cases)</div>
+                <div class="row" style="margin-top:10px;">
+                  <button id="occBtn" class="secondary">Occlusion</button>
+                  <button id="oofBtn" class="secondary">Out of frame</button>
+                  <button id="recBtn" class="secondary">Reacquire</button>
+                </div>
+                <div class="hint" style="margin-top:10px;">
+                  Demo-only: simulates LOST → REACQUIRED until your OpenCV tracker is connected.
+                </div>
+              </div>
+
               <div>
                 <div class="sectionTitle">Annotation tools</div>
                 <div class="row" style="margin-top:10px;">
@@ -500,7 +513,7 @@
       <div class="about">
         <h2>About</h2>
         <p>
-          MedVision (HoloTrack) is a hackathon prototype for motion-tracked annotations over medical videos.
+          MedVision (HoloTrack) is a hackathon prototype for motion-tracked annotations over medical video.
           The goal is to keep annotations fixed to the anatomical structure they were placed on, even when the camera/probe and anatomy move.
         </p>
 
@@ -509,6 +522,7 @@
             <h3>What it does</h3>
             <ul class="list">
               <li>Anchors annotations to the same visual anatomy during camera/probe motion (ultrasound, laparoscopy, echo, etc.)</li>
+              <li>Displays stability controls (static vs tracked; smoothed vs jittery)</li>
               <li>Shows real-time responsiveness (FPS/latency) and confidence</li>
               <li>Demonstrates robustness states: TRACKING / LOST / REACQUIRED</li>
             </ul>
@@ -528,10 +542,10 @@
         <div class="card">
           <h3>Team</h3>
           <div class="teamGrid" style="margin-top:10px;">
-            <div class="person"><b>Caroline Chueh</b><span>Frontend Development</span></div>
-            <div class="person"><b>Zi Yu Choo</b><span>Backend Development</span></div>
-            <div class="person"><b>Nanjiba Sadique</b><span>Backend Development</span></div>
-            <div class="person"><b>Eve Claveau</b><span>Backend Development</span></div>
+            <div class="person"><b>Caroline Chueh</b><span>Frontend</span></div>
+            <div class="person"><b>Zi Yu Choo</b><span>Backend</span></div>
+            <div class="person"><b>Nanjiba Sadique</b><span>Backend</span></div>
+            <div class="person"><b>Eve Claveau</b><span>Backend</span></div>
           </div>
         </div>
 
@@ -590,10 +604,15 @@
       const staticToggle = document.getElementById('staticToggle');
       const smoothToggle = document.getElementById('smoothToggle');
 
+      const occBtn = document.getElementById('occBtn');
+      const oofBtn = document.getElementById('oofBtn');
+      const recBtn = document.getElementById('recBtn');
+
       const statePill = document.getElementById('statePill');
       const perfPill = document.getElementById('perfPill');
       const confPill = document.getElementById('confPill');
       const logEl = document.getElementById('log');
+
       const drawState = document.getElementById('drawState');
 
       // Settings (tracking overlay)
@@ -602,10 +621,9 @@
       const dotSize = document.getElementById('dotSize');
       const dotSizeVal = document.getElementById('dotSizeVal');
       const resetStyleBtn = document.getElementById('resetStyleBtn');
-      const modalitySelect = document.getElementById('modalitySelect');
 
-      // Tools tab: clinical type selector
-      const clinicalTypeSelect = document.getElementById('clinicalTypeSelect');
+      // Modality selector
+      const modalitySelect = document.getElementById('modalitySelect');
 
       // Annotation tools
       const penBtn = document.getElementById('penBtn');
@@ -647,6 +665,7 @@
       let lastFrameT=performance.now();
       let fps=0, latencyMs=26;
 
+      let occUntil=0, oofUntil=0;
       let state="OFF";
 
       function setState(s){
@@ -673,7 +692,31 @@
         let x = ann.x, y = ann.y;
 
         if(trackingOn && !staticToggle.checked){
-          if(state !== "TRACKING") setState("TRACKING");
+          const occluded = now < occUntil;
+          const outOfFrame = now < oofUntil;
+
+          if(occluded || outOfFrame){
+            ann.conf = 0.10;
+            setState("LOST");
+
+            octx.globalAlpha = 0.35;
+            if(boxToggle.checked) drawBox(octx, smoothX, smoothY);
+            octx.beginPath();
+            octx.arc(smoothX, smoothY, Number(dotSize.value), 0, Math.PI*2);
+            octx.fillStyle = "rgba(255,255,255,0.92)";
+            octx.fill();
+            octx.globalAlpha = 1.0;
+
+            if(labelToggle.checked){
+              octx.font = "14px system-ui";
+              octx.fillStyle = "rgba(255,255,255,0.90)";
+              octx.fillText("LOST", 14, 24);
+            }
+            return;
+          }
+
+          if(state === "LOST") setState("REACQUIRED");
+          else setState("TRACKING");
 
           const dt = (now - startTime)/1000;
           const amp = 10;
@@ -900,6 +943,26 @@
         log(`Placed A1 at (${Math.round(x)}, ${Math.round(y)})`);
       });
 
+      occBtn.onclick = () => {
+        if(!trackingOn){ log("Place annotation first"); return; }
+        occUntil = performance.now() + 1400;
+        log("Simulated occlusion → LOST");
+      };
+
+      oofBtn.onclick = () => {
+        if(!trackingOn){ log("Place annotation first"); return; }
+        oofUntil = performance.now() + 1800;
+        log("Simulated out-of-frame → LOST");
+      };
+
+      recBtn.onclick = () => {
+        if(!trackingOn){ log("Place annotation first"); return; }
+        occUntil = 0;
+        oofUntil = 0;
+        setState("REACQUIRED");
+        log("Forced reacquire (demo)");
+      };
+
       // ---------- Settings ----------
       function updateDotSizeLabel(){ dotSizeVal.textContent = String(dotSize.value); }
       dotSize.addEventListener('input', updateDotSizeLabel);
@@ -920,11 +983,6 @@
         log(`Video modality set: ${label}`);
       });
 
-      clinicalTypeSelect.addEventListener('change', () => {
-        const label = clinicalTypeSelect.options[clinicalTypeSelect.selectedIndex].textContent;
-        log(`Clinical video type set: ${label}`);
-      });
-
       // ---------- Start + Resize ----------
       video.addEventListener('loadedmetadata', fitCanvases);
       video.addEventListener('loadeddata', fitCanvases);
@@ -935,4 +993,4 @@
     </script>
   </body>
 </html>
-EOF
+
