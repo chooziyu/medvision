@@ -103,7 +103,7 @@ Through building MedVision, we gained hands-on experience with:
 
 Future improvements we’d like to explore include:
 
-* Supporting **multiple annotations** simultaneously
+
 * Improving tracking robustness using more advanced models
 * Enabling **collaborative, multi-user annotation** for shared learning and remote clinical discussion
 
