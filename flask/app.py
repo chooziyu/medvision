@@ -90,6 +90,9 @@ def stream():
         mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
+@app.post("/api/test")
+def api_test():
+    return jsonify({"ok": True, "message": "Frontend reached backend!"})
 
 if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
